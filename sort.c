@@ -1,20 +1,120 @@
 #include <time.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 int extraMemoryAllocated;
+
+
+void heapify(int arr[], int n, int root)
+{
+    int largest = root;
+    int left = 2 * root + 1;
+    int right = 2 * root + 2;
+
+    if (left < n && arr[left] > arr[largest]) largest = left;
+    if (right < n && arr[right] > arr[largest]) largest = right;
+
+    if (largest != root) 
+    {
+        int temp = arr[root];
+        arr[root] = arr[largest];
+        arr[largest] = temp;
+
+        extraMemoryAllocated += sizeof(int) * 2;
+
+        heapify(arr, n, largest);
+    }
+}
 
 // implements heap sort
 // extraMemoryAllocated counts bytes of memory allocated
 void heapSort(int arr[], int n)
 {
+    for (int i = n / 2 - 1; i >=0; i--)
+        heapify(arr, n, i);
+
+    for (int i = n - 1; i > 0; i--) 
+    {
+        int temp = arr[0];
+        arr[0] = arr[i];
+        arr[i] = temp;
+
+        extraMemoryAllocated += sizeof(int) * 2;
+
+        heapify(arr, i, 0);
+    }
 }
 
+void merge(int pData[], int l, int m, int r)
+{
+    int i, j, k;
+    int n1 = m - l + 1;
+    int n2 = r - m;
+
+    int left[n1], right[n2];
+
+    for (i = 0; i < n1; i++) 
+    {
+        left[i] = pData[l + i];
+        extraMemoryAllocated += sizeof(int);
+    }
+
+    for (j = 0; j < n2; j++) 
+    {
+        right[j] = pData[m + 1 + j];
+        extraMemoryAllocated += sizeof(int);
+    }
+
+    i = 0;
+    j = 0;
+    k = l;
+    while (i < n1 && j < n2)
+    {
+        if (left[i] <= right[j])
+        {
+            pData[k] = left[i];
+            i++;
+        } 
+        else 
+        {
+            pData[k] = right[j];
+            j++;
+        }
+        extraMemoryAllocated += sizeof(int);
+        k++;
+    }
+
+    while (i < n1)
+    {
+        pData[k] = left[i];
+        extraMemoryAllocated += sizeof(int);
+        i++;
+        k++;
+    }
+
+    while (j < n2)
+    {
+        pData[k] = right[j];
+        extraMemoryAllocated += sizeof(int);
+        j++;
+        k++;
+    }
+}
 
 // implement merge sort
 // extraMemoryAllocated counts bytes of extra memory allocated
 void mergeSort(int pData[], int l, int r)
 {
+    if (l < r) 
+    {
+        int m = (l + r) / 2;
+
+        mergeSort(pData, l, m);
+        mergeSort(pData, m + 1, r);
+
+        merge(pData, l, m, r);
+    } 
 }
 
 // parses input file to an integer array
@@ -74,7 +174,7 @@ int main(void)
 	char* fileNames[] = { "input1.txt", "input2.txt", "input3.txt", "input4.txt" };
 	
 	for (i=0;i<4;++i)
-	{
+    {
 		int *pDataSrc, *pDataCopy;
 		int dataSz = parseData(fileNames[i], &pDataSrc);
 		
